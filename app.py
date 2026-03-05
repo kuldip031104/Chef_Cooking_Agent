@@ -24,36 +24,35 @@ if "state" not in st.session_state:
         "rating": None
     }
 
-# Display previous chat messages
+# Display chat history
 for msg in st.session_state.state["messages"]:
     with st.chat_message(msg["role"]):
         st.write(msg["content"])
 
 
-# Chat input
 user_input = st.chat_input("Ask Chef something...")
 
 if user_input:
 
-    # Show user message instantly
+    print("User input received:", user_input)
+
     with st.chat_message("user"):
         st.write(user_input)
 
-    # Save user message
     st.session_state.state["messages"].append({
         "role": "user",
         "content": user_input
     })
 
     try:
-        # Run LangGraph
+        print("Invoking LangGraph...")
         updated_state = graph.invoke(st.session_state.state)
+        print("Graph finished:", updated_state)
 
-        # Update session state
         st.session_state.state = updated_state
 
     except Exception as e:
+        print("ERROR:", e)
         st.error(f"Something went wrong: {e}")
 
-    # Refresh UI
     st.rerun()

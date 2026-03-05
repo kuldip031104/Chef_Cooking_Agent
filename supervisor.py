@@ -7,7 +7,7 @@ from Prompts.supervisor_prompt import SUPERVISOR_PROMPT
 load_dotenv()
 
 llm = ChatGroq(
-    model="llama-3.3-70b-versatile",
+    model="llama-3.1-8b-instant",
     temperature=0
 )
 
@@ -48,5 +48,6 @@ def supervisor_router(state):
     )
 
     result = llm.with_structured_output(RouteDecision).invoke(full_prompt)
+    print(result)
 
     return result.action
