@@ -1,30 +1,45 @@
+from llm import llm
+
 def recipe_agent(state):
 
-    recipe_text = """
-Ahh! Paneer Butter Masala — a jewel of North Indian kitchens.
+    messages = state.get("messages", [])
 
-Legend says the dish was born in Delhi when leftover tandoori gravy
-met butter and cream.
+    people = state.get("number_of_people")
+    spice = state.get("spice_level")
+    region = state.get("region_preference")
+    preference = state.get("preference_type")
 
-Ingredients:
-- 250g paneer
-- 2 tomatoes
-- 1 onion
-- butter
-- cream
-- garam masala
+    prompt = f"""
+You are Chef Kuldip, a master Indian chef with 30 years of experience.
 
-Chef Tip:
-If you want a deeper flavor, roast the spices first.
+Create a recipe based on these preferences:
 
-Would you like step-by-step cooking guidance?
+People: {people}
+Spice Level: {spice}
+Region: {region}
+Cuisine Preference: {preference}
+
+Include:
+- cultural story
+- ingredients
+- cooking method
+- chef tips
 """
 
-    state["recipe"] = recipe_text
+    response = llm.invoke(prompt)
 
-    state["messages"].append({
+    recipe = response.content
+
+    state["recipe"] = recipe
+
+    messages.append({
         "role": "assistant",
-        "content": recipe_text
+        "content": recipe + "\n\nWould you like step-by-step cooking guidance?"
     })
+
+    state["messages"] = messages
+
+    # Move workflow forward
+    state["stage"] = "step_mode"
 
     return state

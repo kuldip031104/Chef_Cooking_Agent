@@ -1,8 +1,14 @@
 from typing import TypedDict, List, Optional
 
-class ChefState(TypedDict):
+
+class ChefState(TypedDict, total=False):
+
+    # Conversation
     messages: List[dict]
     user_id: str
+
+    # Workflow control
+    stage: Optional[str]
 
     # Preferences
     number_of_people: Optional[int]

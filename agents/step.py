@@ -1,31 +1,58 @@
+from llm import llm
+
 def step_agent(state):
 
-    steps = [
-        "Heat butter in a pan.",
-        "Add onions and sauté until golden.",
-        "Add tomato puree and spices.",
-        "Add paneer cubes and simmer.",
-        "Finish with cream and garnish."
-    ]
+    messages = state.get("messages", [])
+    recipe = state.get("recipe")
 
-    step_index = state["current_step"]
+    # If steps not generated yet → ask LLM to generate them
+    if not state.get("steps"):
 
-    if step_index < len(steps):
+        prompt = f"""
+You are Chef Kuldip.
 
-        msg = f"Step {step_index + 1}: {steps[step_index]}"
+From the following recipe, extract clear step-by-step cooking instructions.
 
-        state["messages"].append({
+Recipe:
+{recipe}
+
+Return the steps as a numbered list.
+"""
+
+        response = llm.invoke(prompt)
+
+        steps_text = response.content.split("\n")
+
+        # Clean steps
+        steps = [s.strip() for s in steps_text if s.strip()]
+
+        state["steps"] = steps
+        state["current_step"] = 0
+
+    steps = state["steps"]
+    current_step = state.get("current_step", 0)
+
+    if current_step < len(steps):
+
+        msg = steps[current_step]
+
+        messages.append({
             "role": "assistant",
             "content": msg
         })
 
-        state["current_step"] += 1
+        state["current_step"] = current_step + 1
+        state["stage"] = "step_mode"
 
     else:
 
-        state["messages"].append({
+        messages.append({
             "role": "assistant",
-            "content": "Wonderful cooking! How would you rate the recipe from 1–5?"
+            "content": "Wonderful cooking! 👨‍🍳 How would you rate the recipe from 1–5?"
         })
+
+        state["stage"] = "collect_feedback"
+
+    state["messages"] = messages
 
     return state

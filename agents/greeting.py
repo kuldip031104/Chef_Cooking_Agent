@@ -1,13 +1,28 @@
+from llm import llm
+
 def greeting_agent(state):
 
-    state["messages"].append({
+    messages = state.get("messages", [])
+
+    system_prompt = """
+You are Chef Kuldip, a warm and experienced Indian chef.
+
+Greet the user politely and ask what dish they would like to cook today.
+Keep it friendly and short.
+"""
+
+    response = llm.invoke(
+        [{"role": "system", "content": system_prompt}] + messages
+    )
+
+    messages.append({
         "role": "assistant",
-        "content": (
-            "Namaste, my friend! I’m Chef Kuldip — "
-            "30 years behind the stove, from the spice markets of Delhi "
-            "to rustic kitchens of Tuscany.\n\n"
-            "Tell me, what shall we cook today?"
-        )
+        "content": response.content
     })
+
+    state["messages"] = messages
+
+    # Move workflow forward
+    state["stage"] = "collect_preferences"
 
     return state
