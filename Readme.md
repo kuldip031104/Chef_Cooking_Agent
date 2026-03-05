@@ -19,7 +19,24 @@ The system uses **FastAPI, LangGraph, and LLMs** to simulate a friendly chef tha
 ---
 
 ## 🏗️ System Architecture
-
+User (Browser)
+│
+▼
+HTML Interface (Jinja Templates)
+│
+▼
+FastAPI Backend
+│
+▼
+LangGraph Agent Workflow
+│
+├── Greeting Agent
+├── Preference Agent
+├── Recipe Agent
+└── Cooking Step Agent
+│
+▼
+LLM (Groq API)
 ---
 
 ## ⚙️ Installation
