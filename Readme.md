@@ -1,3 +1,5 @@
+<img width="1919" height="965" alt="image" src="https://github.com/user-attachments/assets/8402983e-fdfd-462d-bb47-b7d275a62c08" />
+
 # 🍳 Chef Cooking AI Agent
 
 Chef Cooking AI Agent is an AI-powered cooking assistant that helps users cook recipes step-by-step.  
@@ -99,3 +101,5 @@ https://github.com/kuldip031104
 ---
 
 ⭐ If you like this project, please give it a star.
+
+
