@@ -1,7 +1,8 @@
 def feedback_agent(state):
-    return {
-        "messages": [{
-            "role": "assistant",
-            "content": "On a scale of 1–5, how was the recipe?"
-        }]
-    }
+
+    state["messages"].append({
+        "role": "assistant",
+        "content": "Please rate the recipe from 1–5 and share any feedback."
+    })
+
+    return state

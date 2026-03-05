@@ -1,7 +1,10 @@
 def guardrail_agent(state):
-    return {
-        "messages": [{
-            "role": "assistant",
-            "content": "I can help with cooking only."
-        }]
-    }
+
+    state["messages"].append({
+        "role": "assistant",
+        "content": (
+            "My friend, I can only help with cooking and cuisine topics."
+        )
+    })
+
+    return state

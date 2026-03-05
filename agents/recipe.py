@@ -1,46 +1,30 @@
-from langchain_groq import ChatGroq
-from pydantic import BaseModel
-from Prompts.persona import CHEF_SYSTEM_PROMPT
-from dotenv import load_dotenv
-load_dotenv()
-
-llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.7)
-
-class RecipeOutput(BaseModel):
-    recipe_name: str
-    cultural_story: str
-    ingredients: list[str]
-    method: list[str]
-    chef_tips: str
-    substitutions: str
-
 def recipe_agent(state):
 
-    prompt = f"""
-    {CHEF_SYSTEM_PROMPT}
+    recipe_text = """
+Ahh! Paneer Butter Masala — a jewel of North Indian kitchens.
 
-    People: {state['number_of_people']}
-    Spice: {state['spice_level']}
-    Region: {state['region_preference']}
-    """
-
-    result = llm.with_structured_output(RecipeOutput).invoke(prompt)
-
-    return {
-        "recipe": result.dict(),
-        "steps": result.method,
-        "current_step": 0,
-        "messages": [{
-            "role": "assistant",
-            "content": f"""
-🍲 {result.recipe_name}
-
-{result.cultural_story}
+Legend says the dish was born in Delhi when leftover tandoori gravy
+met butter and cream.
 
 Ingredients:
-{chr(10).join(result.ingredients)}
+- 250g paneer
+- 2 tomatoes
+- 1 onion
+- butter
+- cream
+- garam masala
 
-Would you like step-by-step guidance?
+Chef Tip:
+If you want a deeper flavor, roast the spices first.
+
+Would you like step-by-step cooking guidance?
 """
-        }]
-    }
+
+    state["recipe"] = recipe_text
+
+    state["messages"].append({
+        "role": "assistant",
+        "content": recipe_text
+    })
+
+    return state

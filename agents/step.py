@@ -1,20 +1,31 @@
 def step_agent(state):
 
-    step_index = state.get("current_step", 0)
-    steps = state["steps"]
+    steps = [
+        "Heat butter in a pan.",
+        "Add onions and sauté until golden.",
+        "Add tomato puree and spices.",
+        "Add paneer cubes and simmer.",
+        "Finish with cream and garnish."
+    ]
 
-    if step_index >= len(steps):
-        return {
-            "messages": [{
-                "role": "assistant",
-                "content": "We are done! Shall I take your feedback?"
-            }]
-        }
+    step_index = state["current_step"]
 
-    return {
-        "current_step": step_index + 1,
-        "messages": [{
+    if step_index < len(steps):
+
+        msg = f"Step {step_index + 1}: {steps[step_index]}"
+
+        state["messages"].append({
             "role": "assistant",
-            "content": f"Step {step_index+1}: {steps[step_index]}"
-        }]
-    }
+            "content": msg
+        })
+
+        state["current_step"] += 1
+
+    else:
+
+        state["messages"].append({
+            "role": "assistant",
+            "content": "Wonderful cooking! How would you rate the recipe from 1–5?"
+        })
+
+    return state
