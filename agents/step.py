@@ -5,36 +5,41 @@ def step_agent(state):
     messages = state.get("messages", [])
     recipe = state.get("recipe")
 
-    # If steps not generated yet → ask LLM to generate them
+    # Generate steps if not created yet
     if not state.get("steps"):
 
         prompt = f"""
 You are Chef Kuldip.
 
-From the following recipe, extract clear step-by-step cooking instructions.
+Extract clear cooking steps from this recipe.
 
 Recipe:
 {recipe}
 
-Return the steps as a numbered list.
+Rules:
+- Return numbered steps
+- Maximum 8 steps
+- One short sentence per step
 """
 
         response = llm.invoke(prompt)
 
-        steps_text = response.content.split("\n")
-
-        # Clean steps
-        steps = [s.strip() for s in steps_text if s.strip()]
+        steps = [
+            s.strip() for s in response.content.split("\n")
+            if s.strip() and s[0].isdigit()
+        ]
 
         state["steps"] = steps
         state["current_step"] = 0
 
+
     steps = state["steps"]
     current_step = state.get("current_step", 0)
 
+
     if current_step < len(steps):
 
-        msg = steps[current_step]
+        msg = f"Step : {steps[current_step]}"
 
         messages.append({
             "role": "assistant",

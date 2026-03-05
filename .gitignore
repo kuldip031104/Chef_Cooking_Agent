@@ -3,6 +3,10 @@
 venv/
 env/
 
+# Environment variables (API keys)
+.env
+.env.*
+
 # Python cache
 __pycache__/
 *.pyc
@@ -11,4 +15,4 @@ __pycache__/
 .ipynb_checkpoints/
 
 # OS files
-.DS_Storegi
+.DS_Store

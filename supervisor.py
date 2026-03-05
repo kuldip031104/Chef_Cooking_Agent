@@ -23,56 +23,63 @@ class RouteDecision(BaseModel):
 
 def supervisor_router(state):
 
-    # If no messages → start conversation
+    # Start conversation
     if not state.get("messages"):
         return "greeting"
 
-    # Ensure stage exists
-    stage = state.get("stage")
-
-    # Deterministic routing first (prevents loops)
-    if stage == "collect_preferences":
-        return "collect_preferences"
-
-    if stage == "generate_recipe":
-        return "generate_recipe"
-
-    if stage == "step_mode":
-        return "step_mode"
-
-    if stage == "collect_feedback":
-        return "collect_feedback"
-
-    # Otherwise let LLM decide
     user_input = state["messages"][-1]["content"]
 
-    state_summary = f"""
-    stage={state.get("stage")}
-    people={state.get("number_of_people")}
-    spice={state.get("spice_level")}
-    region={state.get("region_preference")}
-    recipe_generated={bool(state.get("recipe"))}
-    step_mode={bool(state.get("steps"))}
-    current_step={state.get("current_step")}
-    rating={state.get("rating")}
-    """
+    stage = state.get("stage")
 
-    full_prompt = (
-        SUPERVISOR_PROMPT
-        + "\n"
-        + state_summary
-        + f"\nUser: {user_input}"
-    )
+    # ---------- GLOBAL INTERRUPTS ----------
+
+    text = user_input.lower()
+
+    if "restart" in text or "new recipe" in text:
+        state["stage"] = "collect_preferences"
+        return "collect_preferences"
+
+    if "next" in text or "continue" in text:
+        return "step_mode"
+
+    if text.isdigit() and stage == "collect_feedback":
+        return "collect_feedback"
+
+    # ---------- STATE SUMMARY ----------
+
+    state_summary = f"""
+stage={stage}
+people={state.get("number_of_people")}
+spice={state.get("spice_level")}
+region={state.get("region_preference")}
+recipe_generated={bool(state.get("recipe"))}
+step_mode={bool(state.get("steps"))}
+current_step={state.get("current_step")}
+rating={state.get("rating")}
+"""
+
+    prompt = f"""
+{SUPERVISOR_PROMPT}
+
+Current state:
+{state_summary}
+
+User message:
+{user_input}
+
+Decide the best next agent.
+"""
 
     try:
-        result = llm.with_structured_output(RouteDecision).invoke(full_prompt)
 
-        print(result)
+        result = llm.with_structured_output(RouteDecision).invoke(prompt)
+
+        print("Supervisor decision:", result)
 
         return result.action
 
     except Exception as e:
+
         print("Supervisor error:", e)
 
-        # Safe fallback
         return "regular_chat"

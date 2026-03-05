@@ -10,23 +10,33 @@ def recipe_agent(state):
     preference = state.get("preference_type")
 
     prompt = f"""
-You are Chef Kuldip, a master Indian chef with 30 years of experience.
+You are Chef Kuldip.
 
-Create a recipe based on these preferences:
+Create a short Indian recipe.
 
+Preferences:
 People: {people}
 Spice Level: {spice}
 Region: {region}
-Cuisine Preference: {preference}
+Cuisine: {preference}
 
-Include:
-- cultural story
-- ingredients
-- cooking method
-- chef tips
+Rules:
+- No story
+- Maximum 6 ingredients
+- Maximum 6 cooking steps
+- Keep response under 150 words
+
+Format:
+
+Dish:
+Ingredients:
+Steps:
+Chef Tip:
 """
 
-    response = llm.invoke(prompt)
+    response = llm.invoke(
+        messages + [{"role": "system", "content": prompt}]
+    )
 
     recipe = response.content
 
@@ -38,8 +48,6 @@ Include:
     })
 
     state["messages"] = messages
-
-    # Move workflow forward
     state["stage"] = "step_mode"
 
     return state
