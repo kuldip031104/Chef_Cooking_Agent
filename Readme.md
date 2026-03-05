@@ -69,15 +69,7 @@ Open in browser
 
 ---
 
-## 🔮 Future Improvements
 
-- Voice cooking assistant
-- Recipe image generation
-- Multi-language support
-- WhatsApp cooking bot
-- Recipe database integration
-
----
 
 ## 👨‍💻 Author
 
