@@ -1,6 +1,11 @@
-langchain
-langgraph
+fastapi
+uvicorn[standard]
+jinja2
+python-multipart
 pydantic
 python-dotenv
-sqlite-utils
-psycopg2-binary
+langgraph
+psycopg[binary]
+psycopg-pool
+langchain
+langchain_groq
