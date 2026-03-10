@@ -1,6 +1,7 @@
 from langgraph.graph import StateGraph, END
-from state import ChefState
+from langgraph.checkpoint.postgres import PostgresSaver
 
+from state import ChefState
 from agents.greeting import greeting_agent
 from agents.preferences import preference_agent
 from agents.recipe import recipe_agent
@@ -8,16 +9,22 @@ from agents.step import step_agent
 from agents.feedback import feedback_agent
 from agents.regular_chat import regular_chat_agent
 from agents.guardrail import guardrail_agent
-from langgraph.checkpoint.memory import MemorySaver
 from supervisor import supervisor_router
+
+import psycopg_pool
 
 
 builder = StateGraph(ChefState)
 
-memory = MemorySaver()
+DB_URI = "postgresql://postgres:kuldip%40311@localhost:5432/chef_agent"
+
+# connection pool
+pool = psycopg_pool.ConnectionPool(DB_URI)
+
+# LangGraph memory
+memory = PostgresSaver(pool)
 
 
-# supervisor node
 def supervisor_node(state):
     return state
 
@@ -32,12 +39,8 @@ builder.add_node("collect_feedback", feedback_agent)
 builder.add_node("regular_chat", regular_chat_agent)
 builder.add_node("guardrail", guardrail_agent)
 
-
-# entry point
 builder.set_entry_point("supervisor")
 
-
-# supervisor routing
 builder.add_conditional_edges(
     "supervisor",
     supervisor_router,
@@ -52,8 +55,6 @@ builder.add_conditional_edges(
     }
 )
 
-
-# stop after each agent response
 builder.add_edge("greeting", END)
 builder.add_edge("collect_preferences", END)
 builder.add_edge("generate_recipe", END)
@@ -62,7 +63,4 @@ builder.add_edge("collect_feedback", END)
 builder.add_edge("regular_chat", END)
 builder.add_edge("guardrail", END)
 
-
-graph = builder.compile(
-    checkpointer=memory
-)
+graph = builder.compile(checkpointer=memory)

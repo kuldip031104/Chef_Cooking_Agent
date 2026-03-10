@@ -4,7 +4,6 @@ from typing import Literal
 from dotenv import load_dotenv
 from llm import llm
 from Prompts.supervisor_prompt import SUPERVISOR_PROMPT
-from database import get_last_messages
 
 load_dotenv()
 
@@ -22,26 +21,25 @@ class RouteDecision(BaseModel):
     ]
 
 
+MAX_HISTORY = 6
+
 def supervisor_router(state):
 
-    # If no messages yet
-    if not state.get("messages"):
+    messages = state.get("messages", [])
+
+    if not messages:
         return "greeting"
 
-    user_input = state["messages"][-1]["content"]
+    user_input = messages[-1]["content"]
     stage = state.get("stage")
 
-    # ---------- Workflow Stage Lock ----------
-    # If we are inside a workflow stage, continue that stage
-    if stage in [
-        "collect_preferences",
-        "generate_recipe",
-        "step_mode",
-        "collect_feedback"
-    ]:
-        return stage
+    # last few messages
+    history = messages[-MAX_HISTORY:]
 
-    # ---------- State Summary for LLM ----------
+    chat_history = "\n".join(
+        f"{m['role']}: {m['content']}" for m in history
+    )
+
     state_summary = f"""
 stage={stage}
 people={state.get("number_of_people")}
@@ -56,21 +54,17 @@ rating={state.get("rating")}
     prompt = f"""
 {SUPERVISOR_PROMPT}
 
+Conversation history:
+{chat_history}
+
 Current state:
 {state_summary}
 
-User message:
-{user_input}
-
-Decide which agent should respond next.
-Return JSON only.
 """
 
     try:
         result = llm.with_structured_output(RouteDecision).invoke(prompt)
-
         print("Supervisor decision:", result)
-
         return result.action
 
     except Exception as e:
