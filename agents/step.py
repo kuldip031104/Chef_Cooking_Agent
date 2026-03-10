@@ -1,62 +1,45 @@
-from llm import llm
-
 def step_agent(state):
 
     messages = state.get("messages", [])
-    recipe = state.get("recipe")
-
-    # Generate steps if not created yet
-    if not state.get("steps"):
-
-        prompt = f"""
-You are Chef Kuldip.
-
-Extract clear cooking steps from this recipe.
-
-Recipe:
-{recipe}
-
-Rules:
-- Return numbered steps
-- Maximum 8 steps
-- One short sentence per step
-"""
-
-        response = llm.invoke(prompt)
-
-        steps = [
-            s.strip() for s in response.content.split("\n")
-            if s.strip() and s[0].isdigit()
-        ]
-
-        state["steps"] = steps
-        state["current_step"] = 0
-
-
-    steps = state["steps"]
+    steps = state.get("steps", [])
     current_step = state.get("current_step", 0)
 
+    # Safety check
+    if not steps:
+        messages.append({
+            "role": "assistant",
+            "content": "I couldn't find the cooking steps. Let me regenerate the recipe."
+        })
 
+        state["stage"] = "generate_recipe"
+        state["messages"] = messages
+        return state
+
+
+    # Show next step
     if current_step < len(steps):
 
-        msg = f"Step : {steps[current_step]}"
+        step_text = steps[current_step]
 
         messages.append({
             "role": "assistant",
-            "content": msg
+            "content": f"👨‍🍳 {step_text}\n\nType **next** when you're ready for the next step."
         })
 
         state["current_step"] = current_step + 1
         state["stage"] = "step_mode"
 
+
+    # Cooking finished
     else:
 
         messages.append({
             "role": "assistant",
-            "content": "Wonderful cooking! 👨‍🍳 How would you rate the recipe from 1–5?"
+            "content": "🎉 Wonderful cooking! 👨‍🍳\n\nHow would you rate the recipe from **1–5**?"
         })
 
         state["stage"] = "collect_feedback"
+
 
     state["messages"] = messages
 

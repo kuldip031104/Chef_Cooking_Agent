@@ -31,7 +31,7 @@ builder.add_node("regular_chat", regular_chat_agent)
 builder.add_node("guardrail", guardrail_agent)
 
 
-# entry
+# entry point
 builder.set_entry_point("supervisor")
 
 
@@ -51,19 +51,13 @@ builder.add_conditional_edges(
 )
 
 
-# flow edges
+# stop after each agent response
 builder.add_edge("greeting", END)
-
 builder.add_edge("collect_preferences", END)
-
 builder.add_edge("generate_recipe", END)
-
 builder.add_edge("step_mode", END)
-
 builder.add_edge("collect_feedback", END)
-
 builder.add_edge("regular_chat", END)
-
 builder.add_edge("guardrail", END)
 
 
