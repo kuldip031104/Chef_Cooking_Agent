@@ -1,52 +1,71 @@
-from fastapi import FastAPI,Request,Form
-from database import save_message
+from fastapi import FastAPI, Request, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from graph import graph
+from database import save_message
 
 app = FastAPI()
 
 templates = Jinja2Templates(directory="templates")
 
-state ={
-    "message":[],
-    "user_id":"demo_user"
+
+# initial state
+state = {
+    "messages": [],
+    "user_id": "demo_user"
 }
 
-@app.get("/",response_class=HTMLResponse)
 
-async def Chat_page(request:Request):
+@app.get("/", response_class=HTMLResponse)
+async def chat_page(request: Request):
+
     return templates.TemplateResponse(
         "chat.html",
-        {"request":request,
-         "messages":state.get("message",[])
+        {
+            "request": request,
+            "messages": state.get("messages", [])
         }
     )
-    
+
+
 @app.post("/chat", response_class=HTMLResponse)
 async def chat(request: Request, message: str = Form(...)):
 
     global state
 
-    # Ensure messages key exists
-    if "messages" not in state:
-        state["messages"] = []
+    user_id = state["user_id"]
 
+    # add user message to state
     state["messages"].append({
         "role": "user",
         "content": message
     })
-    # Human message
-    save_message(state['user_id'],"user",message)
 
-    updated_state = graph.invoke(state)
+    # save user message in DB
+    save_message(user_id, "user", message)
+
+    # LangGraph memory config
+    config = {
+        "configurable": {
+            "thread_id": user_id
+        }
+    }
+
+    # run graph
+    updated_state = graph.invoke(state, config=config)
 
     state.update(updated_state)
-    # ai_message
-    ai_message = state['messages'][-1]['content']
-    save_message(state['user_id'],'assistant',ai_message)
+
+    # assistant response
+    ai_message = state["messages"][-1]["content"]
+
+    # save assistant message
+    save_message(user_id, "assistant", ai_message)
 
     return templates.TemplateResponse(
         "chat.html",
-        {"request": request, "messages": state.get("messages", [])}
+        {
+            "request": request,
+            "messages": state.get("messages", [])
+        }
     )

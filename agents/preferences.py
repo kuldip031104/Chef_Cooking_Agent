@@ -5,11 +5,15 @@ def preference_agent(state):
 
     question = state.get("current_preference_question")
 
-    # 1️⃣ Ask number of people
+    import re
+
+# 1️⃣ Ask number of people
     if not state.get("number_of_people"):
 
-        if question == "people" and user_input.isdigit():
-            state["number_of_people"] = int(user_input)
+        match = re.search(r"\d+", user_input)
+
+        if question == "people" and match:
+            state["number_of_people"] = int(match.group())
             state["current_preference_question"] = None
 
         else:

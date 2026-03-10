@@ -46,5 +46,25 @@ def save_message(user_id, role, message):
 
     conn.commit()
 
+def get_last_messages(conn, user_id):
+
+    query = """
+    SELECT role, content
+    FROM messages
+    WHERE user_id = %s
+    ORDER BY id DESC
+    LIMIT 5
+    """
+
+    cursor = conn.cursor()
+    cursor.execute(query, (user_id,))
+    rows = cursor.fetchall()
+
+    rows.reverse()  # maintain chat order
+
+    return [
+        {"role": r[0], "content": r[1]}
+        for r in rows
+    ]
 
         

@@ -8,11 +8,13 @@ from agents.step import step_agent
 from agents.feedback import feedback_agent
 from agents.regular_chat import regular_chat_agent
 from agents.guardrail import guardrail_agent
-
+from langgraph.checkpoint.memory import MemorySaver
 from supervisor import supervisor_router
 
 
 builder = StateGraph(ChefState)
+
+memory = MemorySaver()
 
 
 # supervisor node
@@ -61,4 +63,6 @@ builder.add_edge("regular_chat", END)
 builder.add_edge("guardrail", END)
 
 
-graph = builder.compile()
+graph = builder.compile(
+    checkpointer=memory
+)

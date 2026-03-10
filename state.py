@@ -10,6 +10,9 @@ class ChefState(TypedDict, total=False):
     # Workflow control
     stage: Optional[str]
 
+    # Preference flow control
+    current_preference_question: Optional[str]
+
     # Preferences
     number_of_people: Optional[int]
     spice_level: Optional[str]
