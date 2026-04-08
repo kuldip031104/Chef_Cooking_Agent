@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from graph import graph
-from database import save_message
+from database import create_tables,save_message
 
 app = FastAPI()
 
@@ -15,6 +15,9 @@ state = {
     "user_id": "demo_user"
 }
 
+@app.on_event("startup")
+def startup():
+    create_tables()
 
 @app.get("/", response_class=HTMLResponse)
 async def chat_page(request: Request):

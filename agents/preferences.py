@@ -1,20 +1,55 @@
 def preference_agent(state):
 
+    print("---- PREFERENCE AGENT START ----")
+    print("STATE BEFORE:", state)
+
     messages = state.get("messages", [])
     user_input = messages[-1]["content"].lower().strip()
-
     question = state.get("current_preference_question")
 
     import re
 
-# 1️⃣ Ask number of people
+    # ✅ NEW: If preferences already exist, skip questions
+    if all([
+        state.get("number_of_people"),
+        state.get("spice_level"),
+        state.get("region_preference"),
+        state.get("preference_type"),
+        state.get("allergies")
+    ]):
+
+        messages.append({
+            "role": "assistant",
+            "content": "Your preferences are already set. Generating your recipe now..."
+        })
+
+        state["stage"] = "generate_recipe"
+        state["current_preference_question"] = None
+        state["messages"] = messages
+
+        print("STATE AFTER:", state)
+        print("---- PREFERENCE AGENT END ----")
+
+        return state
+
+
+    # 1️⃣ Number of people
     if not state.get("number_of_people"):
 
-        match = re.search(r"\d+", user_input)
+        if question == "people":
 
-        if question == "people" and match:
-            state["number_of_people"] = int(match.group())
-            state["current_preference_question"] = None
+            match = re.search(r"\d+", user_input)
+
+            if match:
+                state["number_of_people"] = int(match.group())
+                state["current_preference_question"] = None
+            else:
+                messages.append({
+                    "role": "assistant",
+                    "content": "Please tell me the number of people (example: 2 or 4)."
+                })
+                state["messages"] = messages
+                return state
 
         else:
             messages.append({
@@ -22,14 +57,33 @@ def preference_agent(state):
                 "content": "How many people are we cooking for?"
             })
             state["current_preference_question"] = "people"
+            state["stage"] = "collect_preferences"
             state["messages"] = messages
             return state
+
 
     # 2️⃣ Spice level
     if not state.get("spice_level"):
 
-        if question == "spice" and user_input in ["mild", "medium", "spicy"]:
-            state["spice_level"] = user_input
+        if question == "spice":
+
+            if "mild" in user_input:
+                state["spice_level"] = "mild"
+
+            elif "medium" in user_input:
+                state["spice_level"] = "medium"
+
+            elif "spicy" in user_input:
+                state["spice_level"] = "spicy"
+
+            else:
+                messages.append({
+                    "role": "assistant",
+                    "content": "Please choose mild, medium, or spicy."
+                })
+                state["messages"] = messages
+                return state
+
             state["current_preference_question"] = None
 
         else:
@@ -41,11 +95,27 @@ def preference_agent(state):
             state["messages"] = messages
             return state
 
+
     # 3️⃣ Region
     if not state.get("region_preference"):
 
-        if question == "region" and user_input in ["north", "south", "east", "west"]:
-            state["region_preference"] = user_input
+        if question == "region":
+
+            regions = ["north", "south", "east", "west"]
+
+            for r in regions:
+                if r in user_input:
+                    state["region_preference"] = r
+                    break
+
+            if not state.get("region_preference"):
+                messages.append({
+                    "role": "assistant",
+                    "content": "Choose a region: north, south, east, or west."
+                })
+                state["messages"] = messages
+                return state
+
             state["current_preference_question"] = None
 
         else:
@@ -57,15 +127,16 @@ def preference_agent(state):
             state["messages"] = messages
             return state
 
+
     # 4️⃣ Veg / Non-veg
     if not state.get("preference_type"):
 
         if question == "type":
 
-            if user_input in ["veg", "vegetarian"]:
+            if "veg" in user_input:
                 state["preference_type"] = "veg"
 
-            elif user_input in ["non veg", "non-veg"]:
+            elif "non" in user_input:
                 state["preference_type"] = "non-veg"
 
             else:
@@ -87,23 +158,29 @@ def preference_agent(state):
             state["messages"] = messages
             return state
 
+
     # 5️⃣ Allergies
     if not state.get("allergies"):
 
         if question == "allergy":
 
-            if user_input in ["none", "no", "no allergies"]:
+            if "none" in user_input or "no" in user_input:
                 state["allergies"] = "none"
             else:
                 state["allergies"] = user_input
 
             messages.append({
                 "role": "assistant",
-                "content": "Perfect! Let me prepare the best recipe for you."
+                "content": "Perfect! Generating your recipe now..."
             })
 
+            state["current_preference_question"] = None
             state["stage"] = "generate_recipe"
             state["messages"] = messages
+
+            print("STATE AFTER:", state)
+            print("---- PREFERENCE AGENT END ----")
+
             return state
 
         else:
@@ -111,9 +188,12 @@ def preference_agent(state):
                 "role": "assistant",
                 "content": "Do you have any food allergies? (type 'none' if not)"
             })
-
             state["current_preference_question"] = "allergy"
             state["messages"] = messages
             return state
+
+
+    print("STATE AFTER:", state)
+    print("---- PREFERENCE AGENT END ----")
 
     return state

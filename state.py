@@ -13,6 +13,9 @@ class ChefState(TypedDict, total=False):
     # Preference flow control
     current_preference_question: Optional[str]
 
+    # Requested dish
+    dish_name: Optional[str]
+
     # Preferences
     number_of_people: Optional[int]
     spice_level: Optional[str]
